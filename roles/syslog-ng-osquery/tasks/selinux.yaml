@@ -1,0 +1,17 @@
+- name: Check var_log_t selinux type in syslog_pipe
+  shell: |
+    if ls -lZ /var/osquery/syslog_pipe 2>/dev/null | fgrep var_log_t
+    then
+      echo -n "yes"
+    else
+      echo -n "no"
+    fi
+  register: registered_syslog_pipe_type
+
+- name: "Ensure syslog_pipe is var_log_t selinux type"
+  command: chcon -t var_log_t /var/osquery/syslog_pipe
+  when: registered_syslog_pipe_type.stdout_lines[0] == "no"
+
+- name: "Ensure selinux type are persisted"
+  command: semanage fcontext -a -t var_log_t /var/osquery/syslog_pipe
+  when: registered_syslog_pipe_type.stdout_lines[0] == "no"

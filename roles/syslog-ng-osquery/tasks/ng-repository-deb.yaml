@@ -1,0 +1,10 @@
+---
+- name: Ensure syslog apt_key is present
+  apt_key:
+    url: https://ose-repo.syslog-ng.com/apt/syslog-ng-ose-pub.asc
+    state: present
+
+- name: Ensure syslog repository is configured
+  apt_repository:
+    repo: deb https://ose-repo.syslog-ng.com/apt/ stable ubuntu-focal
+    state: present

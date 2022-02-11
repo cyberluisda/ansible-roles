@@ -1,0 +1,11 @@
+---
+# handlers file for syslog-ng-osquery
+- name: Restart syslog-ng
+  service:
+    name: syslog-ng
+    state: restarted
+
+- name: Restart osqueryd
+  service:
+    name: osqueryd
+    state: restarted

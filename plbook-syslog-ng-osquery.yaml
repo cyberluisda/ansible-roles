@@ -1,0 +1,5 @@
+- hosts: all
+  roles:
+  - role: syslog-ng-osquery
+    become: true
+

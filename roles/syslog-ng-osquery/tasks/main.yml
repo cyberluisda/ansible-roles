@@ -1,0 +1,80 @@
+---
+# tasks file for syslog-ng-osquery
+- name: Ensure required packages are installed
+  package:
+    name:
+      - curl
+    update_cache: "{{ ( ansible_os_family == 'RedHat') | ternary('no', 'yes') }}"
+
+- debug:
+    var: ansible_os_family
+- debug:
+    var: ansible_distribution
+
+- name: Ensure repositories are installed (Deb)
+  include_tasks: ng-repository-deb.yaml
+  when: ansible_os_family == 'Debian'
+
+- name: Ensure repositories are installed (Fedora)
+  include_tasks: ng-repository-fedora.yaml
+  when: ansible_distribution == 'Fedora'
+
+- name: Ensure repositories are installed (EPEL)
+  include_tasks: ng-repository-rpm.yaml
+  when:
+    - ansible_distribution != 'Fedora'
+    - ansible_os_family != 'Suse'
+    - ansible_os_family != 'Debian'
+
+- name: Ensure syslog-ng package is installed (Debian)
+  package:
+    name:
+      - syslog-ng-core
+    update_cache: yes
+  notify:
+    - Restart syslog-ng
+  when: ansible_os_family == 'Debian'
+
+- name: Ensure syslog-ng package is installed (RPM)
+  package:
+    name:
+      - syslog-ng
+    update_cache: yes
+  notify:
+    - Restart syslog-ng
+  when: ansible_os_family != 'Debian'
+
+- name: Ensure syslog-ng service is enabled
+  service:
+    name: syslog-ng
+    enabled: yes
+
+- name: Registering main source declared in syslog-ng configuration
+  shell: |
+    out=$(grep -oP '^\s*source [\w]+' /etc/syslog-ng/syslog-ng.conf | cut -f2 -d ' ')
+    if [ "$out" == "" ]
+    then
+      echo "I could extract source name from /etc/syslog-ng/syslog-ng.conf file. Aborting"
+      exit 1
+    fi
+    echo -n "$out"
+  register: registered_source
+
+- name: Ensure syslog-ng config for osquery is deployed
+  template:
+    src: templates/osquery-ng.conf
+    dest: /etc/syslog-ng/conf.d/
+    mode: 0640
+  notify:
+    - Restart syslog-ng
+    - Restart osqueryd
+
+- name: Ensure SELinux permissions are configured
+  include_tasks: selinux.yaml
+  when: ansible_facts.selinux.status == 'enabled'
+  
+- name: Ensure rsyslog is absent
+  package:
+    name:
+        rsyslog
+    state: absent
