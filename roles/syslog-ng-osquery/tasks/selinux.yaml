@@ -12,6 +12,11 @@
   command: chcon -t var_log_t /var/osquery/syslog_pipe
   when: registered_syslog_pipe_type.stdout_lines[0] == "no"
 
+- name: "Ensure semanage tool is installed"
+  package:
+    name: policycoreutils-python-utils
+  when: registered_syslog_pipe_type.stdout_lines[0] == "no"
+
 - name: "Ensure selinux type are persisted"
   command: semanage fcontext -a -t var_log_t /var/osquery/syslog_pipe
   when: registered_syslog_pipe_type.stdout_lines[0] == "no"
