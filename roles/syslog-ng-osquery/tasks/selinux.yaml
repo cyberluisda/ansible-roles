@@ -12,10 +12,19 @@
   command: chcon -t var_log_t /var/osquery/syslog_pipe
   when: registered_syslog_pipe_type.stdout_lines[0] == "no"
 
-- name: "Ensure semanage tool is installed"
+- name: "Ensure semanage tool is installed (CentOS)"
+  package:
+    name: policycoreutils-python
+  when:
+    - ansible_distribution == "CentOS"
+    - registered_syslog_pipe_type.stdout_lines[0] == "no"
+
+- name: "Ensure semanage tool is installed (Except CentOS)"
   package:
     name: policycoreutils-python-utils
-  when: registered_syslog_pipe_type.stdout_lines[0] == "no"
+  when:
+    - ansible_distribution != "CentOS"
+    - registered_syslog_pipe_type.stdout_lines[0] == "no"
 
 - name: "Ensure selinux type are persisted"
   command: semanage fcontext -a -t var_log_t /var/osquery/syslog_pipe
