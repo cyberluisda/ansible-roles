@@ -1,4 +1,10 @@
 ---
+- name: Ensure required packages are installed
+  package:
+    name:
+      - gpg
+    state: present
+
 - name: Ensure syslog-ng apt_key is present
   apt_key:
     url: https://ose-repo.syslog-ng.com/apt/syslog-ng-ose-pub.asc
@@ -6,5 +12,5 @@
 
 - name: Ensure syslog-ng repository is configured
   apt_repository:
-    repo: deb https://ose-repo.syslog-ng.com/apt/ stable ubuntu-focal
+    repo: deb https://ose-repo.syslog-ng.com/apt/ stable {{ ansible_distribution | lower }}-{{ ansible_distribution_release }}
     state: present
