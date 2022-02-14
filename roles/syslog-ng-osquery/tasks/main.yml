@@ -10,6 +10,12 @@
     var: ansible_os_family
 - debug:
     var: ansible_distribution
+- debug:
+    var: ansible_distribution_version
+- debug:
+    var: ansible_distribution_major_version
+- debug:
+    var: ansible_distribution_release
 
 - name: Ensure repositories are installed (Deb)
   include_tasks: ng-repository-deb.yaml
@@ -72,7 +78,7 @@
 - name: Ensure SELinux permissions are configured
   include_tasks: selinux.yaml
   when: ansible_facts.selinux.status == 'enabled'
-  
+
 - name: Ensure rsyslog is absent
   package:
     name:
