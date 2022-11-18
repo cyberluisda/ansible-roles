@@ -28,6 +28,7 @@
           - python3-psutil
           - python3-six
           - python3-wheel
+          - tar
 
     - name: Ensure extra tools packages are installed
       ansible.builtin.package:
