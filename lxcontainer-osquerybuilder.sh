@@ -49,11 +49,35 @@ function log() {
   fi
 }
 
+##
+# Check if command exists in quiet mode using `type` command
+#   Status variable must be loaded to check if command exists.
+#   For example checkCmd which && echo "which found" || echo "which NOT found"
+##
+# $1 command to check
+##
+function checkCmd() {
+  type -t "$1" >/dev/null
+}
+
 installPip3() {
-  local pacakges="python3-pip python3-setuptools"
+  local packages="python3-pip python3-setuptools"
   log 0 "Installing pip"
-  log 1 "apt packages: ${packages}"
-  apt update && apt install -y $packages
+
+  local cmd
+  if checkCmd "dnf"
+  then
+    cmd="dnf install -y"
+  elif checkCmd "yum"
+  then
+    cmd="yum install -y"
+  else
+    cmd="apt update && apt install -y"
+  fi
+
+  log 1 "packages: ${packages}"
+  log 2 "pkg mgr cmd: $cmd"
+  /bin/bash -c "$cmd $packages"
 }
 
 installAnsible() {
