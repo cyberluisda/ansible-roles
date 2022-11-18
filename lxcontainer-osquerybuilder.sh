@@ -82,6 +82,8 @@ installPip3() {
 
 installAnsible() {
   log 0 "Installing Ansible"
+  log 1 "Update pip"
+  pip3 install --upgrade pip
   log 1 "pip package: ${ANSIBLE_PIP_PACKAGE}"
   pip3 install "${ANSIBLE_PIP_PACKAGE}"
 }
