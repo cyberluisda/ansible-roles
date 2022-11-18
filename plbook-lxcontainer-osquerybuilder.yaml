@@ -104,6 +104,7 @@
       become: true
       become_user: osquery
       ansible.builtin.shell: |
+        export PATH=/usr/local/bin:$PATH
         cd /home/osquery/workspace/osquery/build
         cmake -DOSQUERY_TOOLCHAIN_SYSROOT=/usr/local/osquery-toolchain ..
       args:
