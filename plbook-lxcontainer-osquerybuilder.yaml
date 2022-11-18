@@ -1,0 +1,101 @@
+# NOTES:
+#   * Only tested with ubuntu
+#   * ansible-core >= 2.11
+#   * requirements file lxcontainer-osquerybuilder/requirements.yaml
+#
+# Ansible installation (ubuntu)
+#   sudo apt install -y python3-pip
+#   sudo pip3 install 'ansible-core>=2.11'
+---
+- name: Osquery builder tools
+  hosts:
+    - all
+    - localhost
+  become: true
+
+  tasks:
+    - name: Ensure required packages are installed
+      ansible.builtin.package:
+        name:
+          - git
+          - python3
+          - bison
+          - flex
+          - make
+          # Only for launc tests
+          - python3-pip
+          - python3-setuptools
+          - python3-psutil
+          - python3-six
+          - python3-wheel
+
+    - name: Ensure extra tools packages are installed
+      ansible.builtin.package:
+        name:
+          - neovim
+          - fish
+
+    - name: Ensure pip packages are installed
+      ansible.builtin.pip:
+        name:
+          - timeout_decorator
+          - thrift==0.11.0
+          - osquery
+          - pexpect==3.3
+        executable: pip3
+
+    - name: Ensure osquery user exists
+      ansible.builtin.user:
+        name: osquery
+        shell: /usr/bin/fish
+        password: '$6$YoCHp7B0ro1KCax$pdqZXMBz7LUhAcVEzD8OhrhPYhttMN5iSBlqMQR1wublVoOEnhbe0PUXhJJAd.Qa3BmobMYBMTm6OlpIHGZy1/' # osquery
+        home: /home/osquery
+
+    - name: Ensure extra build tools are installed
+      ansible.builtin.unarchive:
+        src: '{{ item.url }}'
+        remote_src: true
+        dest: '{{ item.dest }}'
+        extra_opts:
+          --strip-components={{ item.strip }}
+      loop:
+        - url: https://github.com/osquery/osquery-toolchain/releases/download/1.1.0/osquery-toolchain-1.1.0-{{ ansible_architecture }}.tar.xz
+          dest: /usr/local
+          strip: 0
+        - url: https://cmake.org/files/v3.21/cmake-3.21.4-linux-{{ ansible_architecture }}.tar.gz
+          dest: /usr/local
+          strip: 1
+
+    - name: Ensure workspace path exists
+      ansible.builtin.file:
+        path: /home/osquery/workspace
+        state: directory
+        mode: 0750
+        owner: osquery
+        group: osquery
+
+    - name: Ensure osquery source code is cloned
+      become: true
+      become_user: osquery
+      ansible.builtin.git:
+        repo: https://github.com/osquery/osquery
+        dest: /home/osquery/workspace/osquery
+        version: 5.6.0
+        force: true
+
+    - name: Ensure build path exists
+      ansible.builtin.file:
+        path: /home/osquery/workspace/osquery/build
+        state: directory
+        mode: 0750
+        owner: osquery
+        group: osquery
+
+    - name: Ensure osquery build setup is made
+      become: true
+      become_user: osquery
+      ansible.builtin.shell: |
+        cd /home/osquery/workspace/osquery/build
+        cmake -DOSQUERY_TOOLCHAIN_SYSROOT=/usr/local/osquery-toolchain ..
+      args:
+        creates: /home/osquery/workspace/osquery/build/Makefile
