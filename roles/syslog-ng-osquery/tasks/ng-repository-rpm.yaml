@@ -8,3 +8,5 @@
     url: https://copr.fedorainfracloud.org/coprs/czanik/syslog-ng335/repo/epel-{{ ansible_distribution_major_version }}/czanik-syslog-ng335-epel-{{ ansible_distribution_major_version }}.repo
     dest: /etc/yum.repos.d/czanik-syslog-ng335-epel-{{ ansible_distribution_major_version }}.repo
     validate_certs: no
+  when:
+    - not (ansible_distribution == 'AlmaLinux' and ansible_distribution_major_version | int >=9)
